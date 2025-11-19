@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الدفاع عن البرج - الإصدار الكامل</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: white;
+            min-height: 100vh;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #FFD700, #FF6B6B, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.3em;
+            color: #FFD700;
+        }
+
+        #gameCanvas {
+            background: linear-gradient(160deg, #8BC34A, #4CAF50, #2E7D32);
+            border: 4px solid #5D4037;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .skills-tree {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .skill-category {
+            margin-bottom: 15px;
+        }
+
+        .category-title {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #FFD700;
+            border-bottom: 1px solid #FFD700;
+            padding-bottom: 5px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .skill-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #FFD700;
+        }
+
+        .skill-item.unlocked {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4CAF50;
+        }
+
+        .skill-item.locked {
+            background: rgba(255, 0, 0, 0.2);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .skill-cost {
+            color: #FFD700;
+            font-size: 0.9em;
+            float: left;
+        }
+
+        .achievements {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .achievement-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #FFD700;
+        }
+
+        .achievement-item.completed {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .achievement-progress {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #FFD700;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .environment-info {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .time-of-day {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .weather {
+            font-size: 1.1em;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .shop-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #FF6B6B, #FFD93D);
+            font-weight: bold;
+        }
+
+        .cosmetic-items {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .cosmetic-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .cosmetic-item:hover {
+            transform: translateY(-2px);
+            border-color: #ffd700;
+        }
+
+        .cosmetic-item.equipped {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .cosmetic-item.locked {
+            background: linear-gradient(135deg, #666, #999);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .cosmetic-price {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 0.8em;
+            margin-top: 3px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #FF6B6B, #FFD93D);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .wave-timer {
+            background: linear-gradient(135deg, #ff0080, #ff8c00, #40e0d0);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .bubbles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+        }
+
+        .rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .rain-drop {
+            position: absolute;
+            width: 2px;
+            height: 15px;
+            background: linear-gradient(transparent, rgba(255,255,255,0.6));
+            animation: rainFall 1s linear infinite;
+        }
+
+        @keyframes rainFall {
+            0% { transform: translateY(-100px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(600px); opacity: 0; }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #FFD700;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="bubbles" id="bubbles"></div>
+    <div class="rain" id="rainEffect"></div>
+
+    <div class="container">
+        <header class="floating">
+            <h1>🏰 لعبة الدفاع عن البرج - الإصدار الكامل 🌟</h1>
+            <p style="font-size: 1.2em; margin-top: 10px;">شجرة المهارات • الإنجازات • الديكور • الطقس • الليل والنهار</p>
+        </header>
+
+        <div class="main-layout">
+            <!-- الشريط الجانبي الأيسر -->
+            <div class="sidebar">
+                <div class="panel skills-tree">
+                    <h3>🌳 شجرة المهارات</h3>
+                    <div class="skill-category">
+                        <div class="category-title">🏹 مهارات الهجوم</div>
+                        <div class="skill-item unlocked" data-skill="damageBoost">
+                            <span>زيادة الضرر +10%</span>
+                            <span class="skill-cost">⭐ 5</span>
+                        </div>
+                        <div class="skill-item locked" data-skill="criticalStrike">
+                            <span>ضربة حرجة 20%</span>
+                            <span class="skill-cost">⭐ 10</span>
+                        </div>
+                        <div class="skill-item locked" data-skill="rapidFire">
+                            <span>إطلاق نار سريع</span>
+                            <span class="skill-cost">⭐ 15</span>
+                        </div>
+                    </div>
+                    <div class="skill-category">
+                        <div class="category-title">🛡️ مهارات الدفاع</div>
+                        <div class="skill-item unlocked" data-skill="healthBoost">
+                            <span>زيادة الصحة +25</span>
+                            <span class="skill-cost">⭐ 5</span>
+                        </div>
+                        <div class="skill-item locked" data-skill="towerHealth">
+                            <span>صحة الأبراج +50%</span>
+                            <span class="skill-cost">⭐ 12</span>
+                        </div>
+                    </div>
+                    <div class="skill-category">
+                        <div class="category-title">💰 مهارات الاقتصاد</div>
+                        <div class="skill-item unlocked" data-skill="goldBoost">
+                            <span>ذهب إضافي +10%</span>
+                            <span class="skill-cost">⭐ 8</span>
+                        </div>
+                        <div class="skill-item locked" data-skill="discount">
+                            <span>خصم 15% على الأبراج</span>
+                            <span class="skill-cost">⭐ 20</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel achievements">
+                    <h3>🏆 الإنجازات</h3>
+                    <div class="achievement-item" data-achievement="firstBlood">
+                        <div>أول دم ⚔️</div>
+                        <div>اهزم 10 أعداء</div>
+                        <div class="achievement-progress">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="achievement-item" data-achievement="towerMaster">
+                        <div>سيد الأبراج 🏗️</div>
+                        <div>ابن 5 أبراج مختلفة</div>
+                        <div class="achievement-progress">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="achievement-item" data-achievement="waveWarrior">
+                        <div>محارب الموجات 🌊</div>
+                        <div>تخطى الموجة 5</div>
+                        <div class="achievement-progress">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="achievement-item" data-achievement="rich">
+                        <div>الثري 💰</div>
+                        <div>اجمع 500 ذهب</div>
+                        <div class="achievement-progress">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- المنطقة الرئيسية -->
+            <div class="game-area">
+                <div class="game-stats">
+                    <div class="stat">
+                        <div>💰 الذهب</div>
+                        <div class="stat-value" id="gold">200</div>
+                    </div>
+                    <div class="stat">
+                        <div>❤️ الصحة</div>
+                        <div class="stat-value" id="health">100</div>
+                    </div>
+                    <div class="stat">
+                        <div>🌊 الموجة</div>
+                        <div class="stat-value" id="wave">1</div>
+                    </div>
+                    <div class="stat">
+                        <div>⭐ النقاط</div>
+                        <div class="stat-value" id="skillPoints">10</div>
+                    </div>
+                </div>
+
+                <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+                <div class="wave-timer" id="waveTimer">
+                    ⏰ الموجة القادمة خلال: <span id="timerValue">5</span> ثواني
+                </div>
+
+                <div class="controls">
+                    <button id="startWave">🌊 بدء الموجة</button>
+                    <button id="upgradeTower">⬆️ ترقية البرج</button>
+                    <button id="restartGame">🔄 إعادة البدء</button>
+                </div>
+            </div>
+
+            <!-- الشريط الجانبي الأيمن -->
+            <div class="sidebar">
+                <div class="panel environment-info">
+                    <h3>🌍 البيئة</h3>
+                    <div class="time-of-day" id="timeOfDay">
+                        ☀️ وقت النهار
+                    </div>
+                    <div class="weather" id="weather">
+                        🌤️ طقس معتدل
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>🏪 متجر الأبراج</h3>
+                    <div class="tower-item" data-type="arrow" data-cost="50">
+                        <div>🏹 برج السهام</div>
+                        <div class="tower-cost">💰 50 ذهب</div>
+                    </div>
+                    <div class="tower-item" data-type="cannon" data-cost="100">
+                        <div>💣 برج المدفع</div>
+                        <div class="tower-cost">💰 100 ذهب</div>
+                    </div>
+                    <div class="tower-item" data-type="magic" data-cost="150">
+                        <div>🔮 برج السحر</div>
+                        <div class="tower-cost">💰 150 ذهب</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="shop-tabs">
+                        <div class="tab active" data-tab="towerSkins">🎨 الأبراج</div>
+                        <div class="tab" data-tab="projectileSkins">🎯 القذائف</div>
+                    </div>
+
+                    <div class="cosmetic-items">
+                        <div class="cosmetic-item equipped" data-type="towerSkin" data-skin="default" data-price="0">
+                            <div>المظهر الأساسي</div>
+                            <div class="cosmetic-price">🔓 مجاني</div>
+                        </div>
+                        <div class="cosmetic-item" data-type="towerSkin" data-skin="gold" data-price="100">
+                            <div>المظهر الذهبي</div>
+                            <div class="cosmetic-price">💰 100 ذهب</div>
+                        </div>
+                        <div class="cosmetic-item" data-type="towerSkin" data-skin="ice" data-price="150">
+                            <div>المظهر الجليدي</div>
+                            <div class="cosmetic-price">💰 150 ذهب</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // أنظمة اللعبة الرئيسية
+        const gameState = {
+            // الأساسيات
+            gold: 200,
+            health: 100,
+            wave: 1,
+            skillPoints: 10,
+            selectedTower: null,
+            towers: [],
+            enemies: [],
+            projectiles: [],
+            
+            // نظام الموجات
+            isWaveActive: false,
+            enemiesInWave: 8,
+            enemiesSpawned: 0,
+            waveCooldown: 0,
+            isWaveCooldown: false,
+            
+            // شجرة المهارات
+            skills: {
+                damageBoost: { unlocked: true, level: 0, maxLevel: 3 },
+                criticalStrike: { unlocked: false, level: 0, maxLevel: 1 },
+                rapidFire: { unlocked: false, level: 0, maxLevel: 1 },
+                healthBoost: { unlocked: true, level: 0, maxLevel: 2 },
+                towerHealth: { unlocked: false, level: 0, maxLevel: 1 },
+                goldBoost: { unlocked: true, level: 0, maxLevel: 2 },
+                discount: { unlocked: false, level: 0, maxLevel: 1 }
+            },
+            
+            // الإنجازات
+            achievements: {
+                firstBlood: { completed: false, progress: 0, target: 10 },
+                towerMaster: { completed: false, progress: 0, target: 5 },
+                waveWarrior: { completed: false, progress: 0, target: 5 },
+                rich: { completed: false, progress: 0, target: 500 }
+            },
+            
+            // الديكور
+            cosmetics: {
+                towerSkin: 'default',
+                projectileSkin: 'default',
+                owned: ['default', 'default']
+            },
+            
+            // البيئة
+            environment: {
+                timeOfDay: 'day', // day, night
+                weather: 'clear', // clear, rain, storm
+                timeCounter: 0,
+                weatherCounter: 0
+            }
+        };
+
+        // العناصر الأساسية
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // تعريف المسار
+        const path = [
+            {x: 0, y: 250}, {x: 200, y: 250}, {x: 200, y: 100},
+            {x: 400, y: 100}, {x: 400, y: 350}, {x: 600, y: 350},
+            {x: 600, y: 150}, {x: 800, y: 150}
+        ];
+
+        // تهيئة اللعبة
+        function initGame() {
+            createBubbles();
+            updateUI();
+            updateSkillsUI();
+            updateAchievementsUI();
+            updateEnvironment();
+            createRainEffect();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // نظام شجرة المهارات
+        function unlockSkill(skillId) {
+            const skill = gameState.skills[skillId];
+            if (!skill.unlocked && gameState.skillPoints >= getSkillCost(skillId)) {
+                skill.unlocked = true;
+                skill.level = 1;
+                gameState.skillPoints -= getSkillCost(skillId);
+                applySkillEffect(skillId);
+                updateSkillsUI();
+                updateUI();
+                showNotification(`✨ تم فتح المهارة: ${getSkillName(skillId)}`);
+            }
+        }
+
+        function applySkillEffect(skillId) {
+            switch(skillId) {
+                case 'damageBoost':
+                    // زيادة الضرر تطبق في فئة البرج
+                    break;
+                case 'healthBoost':
+                    gameState.health += 25;
+                    break;
+                case 'goldBoost':
+                    // زيادة الذهب تطبق عند جمع الذهب
+                    break;
+            }
+        }
+
+        // نظام الإنجازات
+        function updateAchievement(achievementId, progress = 1) {
+            const achievement = gameState.achievements[achievementId];
+            if (!achievement.completed) {
+                achievement.progress += progress;
+                if (achievement.progress >= achievement.target) {
+                    achievement.completed = true;
+                    gameState.skillPoints += 5; // مكافأة الإنجاز
+                    showNotification(`🏆 إنجاز مكتمل: ${getAchievementName(achievementId)}! +5 ⭐`);
+                }
+                updateAchievementsUI();
+                updateUI();
+            }
+        }
+
+        // نظام البيئة
+        function updateEnvironment() {
+            // تغيير وقت اليوم كل 30 ثانية
+            gameState.environment.timeCounter++;
+            if (gameState.environment.timeCounter >= 1800) { // 30 ثانية
+                gameState.environment.timeOfDay = gameState.environment.timeOfDay === 'day' ? 'night' : 'day';
+                gameState.environment.timeCounter = 0;
+            }
+
+            // تغيير الطقس كل 20 ثانية
+            gameState.environment.weatherCounter++;
+            if (gameState.environment.weatherCounter >= 1200) { // 20 ثانية
+                const weatherTypes = ['clear', 'rain', 'storm'];
+                gameState.environment.weather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+                gameState.environment.weatherCounter = 0;
+            }
+
+            // تحديث الواجهة
+            document.getElementById('timeOfDay').textContent = 
+                gameState.environment.timeOfDay === 'day' ? '☀️ وقت النهار' : '🌙 وقت الليل';
+            
+            document.getElementById('weather').textContent = 
+                gameState.environment.weather === 'clear' ? '🌤️ طقس معتدل' :
+                gameState.environment.weather === 'rain' ? '🌧️ مطر' : '⛈️ عاصفة';
+
+            // تطبيق تأثيرات الطقس
+            const rainEffect = document.getElementById('rainEffect');
+            rainEffect.style.opacity = gameState.environment.weather === 'rain' ? '0.6' : '0';
+        }
+
+        // إنشاء تأثير المطر
+        function createRainEffect() {
+            const rainContainer = document.getElementById('rainEffect');
+            for (let i = 0; i < 100; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.animationDelay = `${Math.random() * 2}s`;
+                rainContainer.appendChild(drop);
+            }
+        }
+
+        // فئة البرج مع المهارات
+        class Tower {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.level = 1;
+                this.lastShot = 0;
+                this.baseProperties = { ...towerTypes[type] };
+                this.getActualProperties();
+                this.cosmetic = gameState.cosmetics.towerSkin;
+            }
+
+            getActualProperties() {
+                this.properties = { ...this.baseProperties };
+                
+                // تطبيق مهارات اللاعب
+                if (gameState.skills.damageBoost.unlocked) {
+                    this.properties.damage *= (1 + gameState.skills.damageBoost.level * 0.1);
+                }
+                if (gameState.skills.rapidFire.unlocked) {
+                    this.properties.speed *= 0.7; // إطلاق أسرع
+                }
+            }
+
+            draw() {
+                // تطبيق تأثيرات الليل
+                if (gameState.environment.timeOfDay === 'night') {
+                    ctx.globalAlpha = 0.8;
+                }
+
+                const skin = cosmeticSystem.towerSkins[this.cosmetic] || cosmeticSystem.towerSkins.default;
+                const gradient = ctx.createRadialGradient(this.x, this.y, 5, this.x, this.y, 15);
+                gradient.addColorStop(0, '#FFFFFF');
+                gradient.addColorStop(1, skin.base);
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.globalAlpha = 1.0;
+            }
+
+            update() {
+                if (gameState.isWaveCooldown) return;
+
+                const now = Date.now();
+                if (now - this.lastShot > this.properties.speed) {
+                    const target = this.findTarget();
+                    if (target) {
+                        this.shoot(target);
+                        this.lastShot = now;
+                    }
+                }
+            }
+
+            findTarget() {
+                for (let enemy of gameState.enemies) {
+                    const dx = enemy.x - this.x;
+                    const dy = enemy.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance <= this.properties.range) {
+                        return enemy;
+                    }
+                }
+                return null;
+            }
+
+            shoot(target) {
+                gameState.projectiles.push(new Projectile(this.x, this.y, target, this.properties));
+            }
+        }
+
+        // الأنظمة المساعدة
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function updateUI() {
+            document.getElementById('gold').textContent = Math.floor(gameState.gold);
+            document.getElementById('health').textContent = gameState.health;
+            document.getElementById('wave').textContent = gameState.wave;
+            document.getElementById('skillPoints').textContent = gameState.skillPoints;
+        }
+
+        // ... (بقية الدوال والأنظمة من الكود السابق)
+
+        // بدء اللعبة
+        initGame();
+    </script>
+</body>
+</html>
